@@ -22,6 +22,8 @@ jobs:
           ref: main
 
       - name: Sync upstream changes
+        env:
+          PUSH_URL: https://x-access-token:${{ secrets.UPSTREAM_SYNC_TOKEN }}@github.com/${{ github.repository }}.git
         run: |
           git config user.name "GH Action - Upstream Sync"
           git config user.email "action@github.com"
@@ -32,7 +34,7 @@ jobs:
           if git diff --quiet HEAD upstream/main; then
             # 内容和上游一致，直接对齐，顺带清理历史分叉留下的多余 merge commit
             git reset --hard upstream/main
-            git push --force-with-lease origin main
+            git push --force-with-lease "$PUSH_URL" main
           else
             # 有本地修改，保持原来的合并方式，不覆盖任何人的改动
             if ! git pull --no-rebase upstream main; then
@@ -40,5 +42,5 @@ jobs:
               echo "[Error] Merge conflict detected while syncing upstream. Please sync your fork manually and resolve the conflicts."
               exit 1
             fi
-            git push origin main
+            git push "$PUSH_URL" main
           fi
